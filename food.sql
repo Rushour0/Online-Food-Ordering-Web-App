@@ -512,46 +512,33 @@ INSERT INTO
 VALUES
   (new.customer_id, 'user', 'ADD ORDER', NOW());
 
+-- SIR KO PUCHENGE
+-- order logging update
 CREATE TRIGGER `order_logging_update`
 AFTER
 UPDATE
-  ON `orders` FOR EACH ROW BEGIN IF (NEW.status = 'Cancelled by Customer') THEN
+  ON `orders` FOR EACH ROW BEGIN IF NEW.status = 'Cancelled by Customer' THEN
 INSERT INTO
   logging(user_id, user_type, event, timestamp)
 VALUES
-  (
-    new.id,
-    'user',
-    'CANCELLED',
-    NOW()
-  );
+  (new.id, 'user', 'CANCELLED', NOW());
 
-ELSEIF (NEW.status = 'Cancelled by Admin') THEN
+ELSEIF NEW.status = 'Cancelled by Admin' THEN
 INSERT INTO
   logging(user_id, user_type, event, timestamp)
 VALUES
-  (
-    new.id,
-    'admin',
-    'CANCELLED',
-    NOW()
-  );
+  (new.id, 'admin', 'CANCELLED', NOW());
 
-ELSEIF (NEW.status = 'Delivered') THEN
+ELSEIF NEW.status = 'Delivered' THEN
 INSERT INTO
   logging(user_id, user_type, event, timestamp)
 VALUES
-  (
-    new.id,
-    'admin',
-    'DELIVERED',
-    NOW()
-  );
+  (new.id, 'admin', 'DELIVERED', NOW());
 
 END IF;
 
-END;
-
+END -- --------------------------------------------------------
+-- order logging delete
 CREATE TRIGGER `order_logging_delete`
 AFTER
   DELETE ON `orders` FOR EACH ROW
@@ -560,6 +547,7 @@ INSERT INTO
 VALUES
   (old.customer_id, 'user', 'DELETE ORDER', NOW());
 
+-- ticket logging insert
 CREATE TRIGGER `ticket_logging_insert`
 AFTER
 INSERT
@@ -569,6 +557,8 @@ INSERT INTO
 VALUES
   (new.poster_id, 'user', 'ADD TICKET', NOW());
 
+-- SIR KO PUCHENGE
+-- ticket logging update
 CREATE TRIGGER `ticket_logging_update`
 AFTER
 UPDATE
@@ -607,9 +597,7 @@ VALUES
 
 END IF;
 
-END;
-
---
+END --
 -- Indexes for dumped tables
 --
 --
