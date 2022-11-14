@@ -433,6 +433,18 @@ VALUES
     '2017-03-30 20:49:35'
   );
 
+CREATE TABLE `user_update_log` (
+  `id` int(11) NOT NULL,
+  `role` varchar(15) NOT NULL DEFAULT 'Customer',
+  `name` varchar(15) NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `password` varchar(16) NOT NULL,
+  `email` varchar(35) DEFAULT NULL,
+  `address` varchar(300) DEFAULT NULL,
+  `contact` bigint(11) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb 4;
+
 -- --------------------------------------------------------
 --
 -- Table structure for table `users`

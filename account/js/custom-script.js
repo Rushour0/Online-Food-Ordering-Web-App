@@ -1,6 +1,6 @@
 /*================================================================================
-	Item Name: Somaiya Vidyavihar - Captive Portal
-	Version: 3.1
-	Author: Arctech Ventures
-	Author URL: http://www.arctechventures.com
+	Item Name: DBMS
+	Version: 0.1
+	Author: DBMS
+	Author URL: me
 ================================================================================ */
