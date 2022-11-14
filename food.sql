@@ -1,16 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.8.4
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 03, 2020 at 11:26 AM
--- Server version: 10.1.37-MariaDB
--- PHP Version: 5.6.39
+-- Generation Time: Nov 14, 2022 at 07:44 PM
+-- Server version: 10.4.24-MariaDB
+-- PHP Version: 8.1.6
 SET
   SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-
-SET
-  AUTOCOMMIT = 0;
 
 START TRANSACTION;
 
@@ -40,7 +37,7 @@ CREATE TABLE `items` (
   `id` int(11) NOT NULL,
   `name` varchar(20) NOT NULL,
   `price` int(11) NOT NULL,
-  `deleted` tinyint(4) NOT NULL DEFAULT '0',
+  `deleted` tinyint(4) NOT NULL DEFAULT 0,
   `image` blob NOT NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
@@ -104,6 +101,17 @@ VALUES
 
 -- --------------------------------------------------------
 --
+-- Table structure for table `logging`
+--
+CREATE TABLE `logging` (
+  `user_id` varchar(255) NOT NULL,
+  `user_type` varchar(255) NOT NULL,
+  `event` varchar(255) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE = InnoDB DEFAULT CHARSET = latin1;
+
+-- --------------------------------------------------------
+--
 -- Table structure for table `orders`
 --
 CREATE TABLE `orders` (
@@ -111,11 +119,11 @@ CREATE TABLE `orders` (
   `customer_id` int(11) NOT NULL,
   `address` varchar(300) NOT NULL,
   `description` varchar(300) NOT NULL,
-  `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `date` datetime NOT NULL DEFAULT current_timestamp(),
   `payment_type` varchar(16) NOT NULL DEFAULT 'Wallet',
   `total` int(11) NOT NULL,
   `status` varchar(25) NOT NULL DEFAULT 'Yet to be delivered',
-  `deleted` tinyint(4) NOT NULL DEFAULT '0'
+  `deleted` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
 --
@@ -201,6 +209,51 @@ VALUES
     1
   );
 
+--
+-- Triggers `orders`
+--
+DELIMITER $ $ CREATE TRIGGER `order_logging_delete`
+AFTER
+  DELETE ON `orders` FOR EACH ROW
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (old.customer_id, 'user', 'DELETE ORDER', NOW()) $ $ DELIMITER;
+
+DELIMITER $ $ CREATE TRIGGER `order_logging_insert`
+AFTER
+INSERT
+  ON `orders` FOR EACH ROW
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.customer_id, 'user', 'ADD ORDER', NOW()) $ $ DELIMITER;
+
+DELIMITER $ $ CREATE TRIGGER `order_logging_update`
+AFTER
+UPDATE
+  ON `orders` FOR EACH ROW BEGIN IF NEW.status = 'Cancelled by Customer' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.id, 'user', 'CANCELLED', NOW());
+
+ELSEIF NEW.status = 'Cancelled by Admin' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.id, 'admin', 'CANCELLED', NOW());
+
+ELSEIF NEW.status = 'Delivered' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.id, 'admin', 'DELIVERED', NOW());
+
+END IF;
+
+END $ $ DELIMITER;
+
 -- --------------------------------------------------------
 --
 -- Table structure for table `order_details`
@@ -245,8 +298,8 @@ CREATE TABLE `tickets` (
   `description` varchar(3000) NOT NULL,
   `status` varchar(8) NOT NULL DEFAULT 'Open',
   `type` varchar(30) NOT NULL DEFAULT 'Others',
-  `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `deleted` tinyint(4) NOT NULL DEFAULT '0'
+  `date` datetime NOT NULL DEFAULT current_timestamp(),
+  `deleted` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
 --
@@ -275,6 +328,58 @@ VALUES
     0
   );
 
+--
+-- Triggers `tickets`
+--
+DELIMITER $ $ CREATE TRIGGER `ticket_logging_insert`
+AFTER
+INSERT
+  ON `tickets` FOR EACH ROW
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.poster_id, 'user', 'ADD TICKET', NOW()) $ $ DELIMITER;
+
+DELIMITER $ $ CREATE TRIGGER `ticket_logging_update`
+AFTER
+UPDATE
+  ON `tickets` FOR EACH ROW BEGIN IF new.status = 'Answered' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (
+    new.poster_id,
+    'user',
+    'UPDATE TICKET ANSWERED',
+    NOW()
+  );
+
+ELSEIF new.status = 'Closed' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (
+    new.poster_id,
+    'user',
+    'UPDATE TICKET CLOSED',
+    NOW()
+  );
+
+ELSEIF new.status = 'Open' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (
+    new.poster_id,
+    'user',
+    'UPDATE TICKET REOPENED',
+    NOW()
+  );
+
+END IF;
+
+END $ $ DELIMITER;
+
 -- --------------------------------------------------------
 --
 -- Table structure for table `ticket_details`
@@ -284,7 +389,7 @@ CREATE TABLE `ticket_details` (
   `ticket_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `description` varchar(1000) NOT NULL,
-  `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `date` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
 --
@@ -341,8 +446,8 @@ CREATE TABLE `users` (
   `email` varchar(35) DEFAULT NULL,
   `address` varchar(300) DEFAULT NULL,
   `contact` bigint(11) NOT NULL,
-  `verified` tinyint(1) NOT NULL DEFAULT '0',
-  `deleted` tinyint(4) NOT NULL DEFAULT '0'
+  `verified` tinyint(1) NOT NULL DEFAULT 0,
+  `deleted` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
 --
@@ -479,7 +584,7 @@ CREATE TABLE `wallet_details` (
   `wallet_id` int(11) NOT NULL,
   `number` varchar(16) NOT NULL,
   `cvv` int(3) NOT NULL,
-  `balance` int(11) NOT NULL DEFAULT '2000'
+  `balance` int(11) NOT NULL DEFAULT 2000
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
 --
@@ -496,108 +601,7 @@ VALUES
   (6, 6, '5647187738843860', 768, 2000),
   (7, 7, '2514747678902921', 631, 2000);
 
-CREATE TABLE `logging` (
-  `user_id` varchar(255) NOT NULL,
-  `user_type` varchar(255) NOT NULL,
-  `event` varchar(255) NOT NULL,
-  `timestamp` timestamp NOT NULL
-) ENGINE = InnoDB DEFAULT CHARSET = latin1;
-
-CREATE TRIGGER `order_logging_insert`
-AFTER
-INSERT
-  ON `orders` FOR EACH ROW
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.customer_id, 'user', 'ADD ORDER', NOW());
-
--- SIR KO PUCHENGE
--- order logging update
-CREATE TRIGGER `order_logging_update`
-AFTER
-UPDATE
-  ON `orders` FOR EACH ROW BEGIN IF NEW.status = 'Cancelled by Customer' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.id, 'user', 'CANCELLED', NOW());
-
-ELSEIF NEW.status = 'Cancelled by Admin' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.id, 'admin', 'CANCELLED', NOW());
-
-ELSEIF NEW.status = 'Delivered' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.id, 'admin', 'DELIVERED', NOW());
-
-END IF;
-
-END -- --------------------------------------------------------
--- order logging delete
-CREATE TRIGGER `order_logging_delete`
-AFTER
-  DELETE ON `orders` FOR EACH ROW
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (old.customer_id, 'user', 'DELETE ORDER', NOW());
-
--- ticket logging insert
-CREATE TRIGGER `ticket_logging_insert`
-AFTER
-INSERT
-  ON `tickets` FOR EACH ROW
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.poster_id, 'user', 'ADD TICKET', NOW());
-
--- SIR KO PUCHENGE
--- ticket logging update
-CREATE TRIGGER `ticket_logging_update`
-AFTER
-UPDATE
-  ON `tickets` FOR EACH ROW BEGIN IF new.status = 'Answered' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (
-    new.poster_id,
-    'user',
-    'UPDATE TICKET ANSWERED',
-    NOW()
-  );
-
-ELSEIF new.status = 'Closed' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (
-    new.poster_id,
-    'user',
-    'UPDATE TICKET CLOSED',
-    NOW()
-  );
-
-ELSEIF new.status = 'Open' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (
-    new.poster_id,
-    'user',
-    'UPDATE TICKET REOPENED',
-    NOW()
-  );
-
-END IF;
-
-END --
+--
 -- Indexes for dumped tables
 --
 --
