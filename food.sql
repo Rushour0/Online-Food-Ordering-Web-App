@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 14, 2022 at 07:44 PM
+-- Generation Time: Nov 14, 2022 at 09:23 PM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 SET
@@ -110,6 +110,33 @@ CREATE TABLE `logging` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 
+--
+-- Dumping data for table `logging`
+--
+INSERT INTO
+  `logging` (`user_id`, `user_type`, `event`, `timestamp`)
+VALUES
+  ('8', 'user', 'ADD TICKET', '2022-11-14 18:49:05'),
+  (
+    '8',
+    'user',
+    'UPDATE TICKET CLOSED',
+    '2022-11-14 18:49:50'
+  ),
+  (
+    '8',
+    'user',
+    'UPDATE TICKET REOPENED',
+    '2022-11-14 18:49:56'
+  ),
+  ('8', 'user', 'ADD ORDER', '2022-11-14 18:52:45'),
+  (
+    '8',
+    'user',
+    'UPDATE TICKET CLOSED',
+    '2022-11-14 20:21:54'
+  );
+
 -- --------------------------------------------------------
 --
 -- Table structure for table `orders`
@@ -207,6 +234,17 @@ VALUES
     325,
     'Cancelled by Customer',
     1
+  ),
+  (
+    7,
+    8,
+    'Meow meow',
+    '',
+    '2022-11-15 00:22:45',
+    'Wallet',
+    99,
+    'Yet to be delivered',
+    0
   );
 
 --
@@ -285,7 +323,8 @@ VALUES
   (11, 5, 5, 1, 20),
   (12, 6, 2, 5, 225),
   (13, 6, 3, 3, 60),
-  (14, 6, 5, 2, 40);
+  (14, 6, 5, 2, 40),
+  (15, 7, 4, 1, 99);
 
 -- --------------------------------------------------------
 --
@@ -325,6 +364,16 @@ VALUES
     'Answered',
     'Support',
     '2017-03-30 18:08:51',
+    0
+  ),
+  (
+    2,
+    8,
+    'This is industry',
+    'This is not industry if it isn&#039;t retarded ... I mean SG',
+    'Closed',
+    'Support',
+    '2022-11-15 00:19:05',
     0
   );
 
@@ -431,19 +480,14 @@ VALUES
     1,
     'Reply-3 for Subject 1 from Administrator.',
     '2017-03-30 20:49:35'
+  ),
+  (
+    5,
+    2,
+    8,
+    'This is not industry if it isn&#039;t retarded ... I mean SG',
+    '2022-11-15 00:19:05'
   );
-
-CREATE TABLE `user_update_log` (
-  `id` int(11) NOT NULL,
-  `role` varchar(15) NOT NULL DEFAULT 'Customer',
-  `name` varchar(15) NOT NULL,
-  `username` varchar(100) NOT NULL,
-  `password` varchar(16) NOT NULL,
-  `email` varchar(35) DEFAULT NULL,
-  `address` varchar(300) DEFAULT NULL,
-  `contact` bigint(11) NOT NULL,
-  `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb 4;
 
 -- --------------------------------------------------------
 --
@@ -562,6 +606,87 @@ VALUES
     1234567890,
     1,
     0
+  ),
+  (
+    8,
+    'Customer',
+    'Rushikesh',
+    'Rushour0',
+    'password',
+    'pataderushikesh@gmail.com',
+    'Meow meow is meow',
+    7066323922,
+    0,
+    0
+  );
+
+--
+-- Triggers `users`
+--
+DELIMITER $ $ CREATE TRIGGER `update_user_information`
+AFTER
+UPDATE
+  ON `users` FOR EACH ROW
+INSERT INTO
+  user_update_log(
+    id,
+    username,
+    password,
+    email,
+    address,
+    contact,
+    timestamp
+  )
+VALUES
+  (
+    new.id,
+    new.username,
+    new.password,
+    new.email,
+    new.address,
+    new.contact,
+    NOW()
+  ) $ $ DELIMITER;
+
+-- --------------------------------------------------------
+--
+-- Table structure for table `user_update_log`
+--
+CREATE TABLE `user_update_log` (
+  `id` int(11) NOT NULL,
+  `name` varchar(15) NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `password` varchar(16) NOT NULL,
+  `email` varchar(35) DEFAULT NULL,
+  `address` varchar(300) DEFAULT NULL,
+  `contact` bigint(11) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+--
+-- Dumping data for table `user_update_log`
+--
+INSERT INTO
+  `user_update_log` (
+    `id`,
+    `name`,
+    `username`,
+    `password`,
+    `email`,
+    `address`,
+    `contact`,
+    `timestamp`
+  )
+VALUES
+  (
+    8,
+    '',
+    'Rushour0',
+    'password',
+    'pataderushikesh@gmail.com',
+    'Meow meow is meow',
+    7066323922,
+    '2022-11-14 20:21:15'
   );
 
 -- --------------------------------------------------------
@@ -585,7 +710,8 @@ VALUES
   (4, 4),
   (5, 5),
   (6, 6),
-  (7, 7);
+  (7, 7),
+  (8, 8);
 
 -- --------------------------------------------------------
 --
@@ -611,7 +737,8 @@ VALUES
   (4, 4, '5475856443351234', 521, 2000),
   (5, 5, '9076633115663264', 229, 2000),
   (6, 6, '5647187738843860', 768, 2000),
-  (7, 7, '2514747678902921', 631, 2000);
+  (7, 7, '2514747678902921', 631, 2000),
+  (8, 8, '5300056099221993', 371, 1901);
 
 --
 -- Indexes for dumped tables
@@ -731,7 +858,7 @@ ALTER TABLE
   `orders`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 7;
+  AUTO_INCREMENT = 8;
 
 --
 -- AUTO_INCREMENT for table `order_details`
@@ -740,7 +867,7 @@ ALTER TABLE
   `order_details`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 15;
+  AUTO_INCREMENT = 16;
 
 --
 -- AUTO_INCREMENT for table `tickets`
@@ -749,7 +876,7 @@ ALTER TABLE
   `tickets`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 2;
+  AUTO_INCREMENT = 3;
 
 --
 -- AUTO_INCREMENT for table `ticket_details`
@@ -758,7 +885,7 @@ ALTER TABLE
   `ticket_details`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 5;
+  AUTO_INCREMENT = 6;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -767,7 +894,7 @@ ALTER TABLE
   `users`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 8;
+  AUTO_INCREMENT = 9;
 
 --
 -- AUTO_INCREMENT for table `wallet`
@@ -776,7 +903,7 @@ ALTER TABLE
   `wallet`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 8;
+  AUTO_INCREMENT = 9;
 
 --
 -- AUTO_INCREMENT for table `wallet_details`
@@ -785,7 +912,7 @@ ALTER TABLE
   `wallet_details`
 MODIFY
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  AUTO_INCREMENT = 8;
+  AUTO_INCREMENT = 9;
 
 --
 -- Constraints for dumped tables
