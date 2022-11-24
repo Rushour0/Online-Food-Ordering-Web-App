@@ -310,7 +310,7 @@ if ($continue) {
             <div class="footer-copyright">
                 <div class="container">
                     <span>Copyright © 2022 <a class="grey-text text-lighten-4" href="#" target="_blank">Students</a> All rights reserved.</span>
-                    <span class="right"> Design and Developed by <a class="grey-text text-lighten-4" href="#">Students</a></span>
+                    <span class="right"> Design and Developed by <a class="grey-text text-lighten-4" href="#">PF15, PF18, PF21, PF23</a></span>
                 </div>
             </div>
         </footer>
