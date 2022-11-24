@@ -247,50 +247,6 @@ VALUES
     0
   );
 
---
--- Triggers `orders`
---
-DELIMITER $ $ CREATE TRIGGER `order_logging_delete`
-AFTER
-  DELETE ON `orders` FOR EACH ROW
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (old.customer_id, 'user', 'DELETE ORDER', NOW()) $ $ DELIMITER;
-
-DELIMITER $ $ CREATE TRIGGER `order_logging_insert`
-AFTER
-INSERT
-  ON `orders` FOR EACH ROW
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.customer_id, 'user', 'ADD ORDER', NOW()) $ $ DELIMITER;
-
-DELIMITER $ $ CREATE TRIGGER `order_logging_update`
-AFTER
-UPDATE
-  ON `orders` FOR EACH ROW BEGIN IF NEW.status = 'Cancelled by Customer' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.id, 'user', 'CANCELLED', NOW());
-
-ELSEIF NEW.status = 'Cancelled by Admin' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.id, 'admin', 'CANCELLED', NOW());
-
-ELSEIF NEW.status = 'Delivered' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.id, 'admin', 'DELIVERED', NOW());
-
-END IF;
-
-END $ $ DELIMITER;
 
 -- --------------------------------------------------------
 --
@@ -377,57 +333,7 @@ VALUES
     0
   );
 
---
--- Triggers `tickets`
---
-DELIMITER $ $ CREATE TRIGGER `ticket_logging_insert`
-AFTER
-INSERT
-  ON `tickets` FOR EACH ROW
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (new.poster_id, 'user', 'ADD TICKET', NOW()) $ $ DELIMITER;
 
-DELIMITER $ $ CREATE TRIGGER `ticket_logging_update`
-AFTER
-UPDATE
-  ON `tickets` FOR EACH ROW BEGIN IF new.status = 'Answered' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (
-    new.poster_id,
-    'user',
-    'UPDATE TICKET ANSWERED',
-    NOW()
-  );
-
-ELSEIF new.status = 'Closed' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (
-    new.poster_id,
-    'user',
-    'UPDATE TICKET CLOSED',
-    NOW()
-  );
-
-ELSEIF new.status = 'Open' THEN
-INSERT INTO
-  logging(user_id, user_type, event, timestamp)
-VALUES
-  (
-    new.poster_id,
-    'user',
-    'UPDATE TICKET REOPENED',
-    NOW()
-  );
-
-END IF;
-
-END $ $ DELIMITER;
 
 -- --------------------------------------------------------
 --
@@ -623,7 +529,8 @@ VALUES
 --
 -- Triggers `users`
 --
-DELIMITER $ $ CREATE TRIGGER `update_user_information`
+DELIMITER $$
+CREATE TRIGGER `update_user_information`
 AFTER
 UPDATE
   ON `users` FOR EACH ROW
@@ -646,8 +553,118 @@ VALUES
     new.address,
     new.contact,
     NOW()
-  ) $ $ DELIMITER;
+  ) 
+  $$ 
+DELIMITER ;
 
+--
+-- Triggers `tickets`
+--
+DELIMITER $$ 
+CREATE TRIGGER `ticket_logging_insert`
+AFTER
+INSERT
+  ON `tickets` FOR EACH ROW
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.poster_id, 'user', 'ADD TICKET', NOW()) $$ 
+DELIMITER ;
+
+DELIMITER $$ 
+
+CREATE TRIGGER `ticket_logging_update`
+AFTER
+UPDATE
+  ON `tickets` FOR EACH ROW BEGIN IF (new.status = 'Answered') THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (
+    new.poster_id,
+    'user',
+    'UPDATE TICKET ANSWERED',
+    NOW()
+  );
+
+ELSEIF (new.status = 'Closed') THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (
+    new.poster_id,
+    'user',
+    'UPDATE TICKET CLOSED',
+    NOW()
+  );
+
+ELSEIF (new.status = 'Open') THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (
+    new.poster_id,
+    'user',
+    'UPDATE TICKET REOPENED',
+    NOW()
+  );
+
+END IF;
+
+END $$
+
+DELIMITER ;
+
+--
+-- Triggers `orders`
+--
+DELIMITER $$ 
+CREATE TRIGGER `order_logging_delete`
+AFTER
+  DELETE ON `orders` FOR EACH ROW
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (old.customer_id, 'user', 'DELETE ORDER', NOW()) $$ 
+DELIMITER ;
+
+DELIMITER $$ 
+CREATE TRIGGER `order_logging_insert`
+AFTER
+INSERT
+  ON `orders` FOR EACH ROW
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.customer_id, 'user', 'ADD ORDER', NOW()) $$ 
+DELIMITER ;
+
+DELIMITER $$ 
+CREATE TRIGGER `order_logging_update`
+AFTER
+UPDATE
+  ON `orders` FOR EACH ROW BEGIN IF NEW.status = 'Cancelled by Customer' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.id, 'user', 'CANCELLED', NOW());
+
+ELSEIF NEW.status = 'Cancelled by Admin' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.id, 'admin', 'CANCELLED', NOW());
+
+ELSEIF NEW.status = 'Delivered' THEN
+INSERT INTO
+  logging(user_id, user_type, event, timestamp)
+VALUES
+  (new.id, 'admin', 'DELIVERED', NOW());
+
+END IF;
+
+END $$ 
+DELIMITER ;
 -- --------------------------------------------------------
 --
 -- Table structure for table `user_update_log`
